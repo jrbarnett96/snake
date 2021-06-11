@@ -1,3 +1,5 @@
+from random import randint
+
 UP = (0, 1)
 DOWN = (0, -1)
 LEFT = (-1, 0)
@@ -26,7 +28,7 @@ class Snake:
 
 class Apple:
     def __init__(self, position, pt_val=1):
-        self.point_value = 1
+        self.pt_val = pt_val
         self.position = position
 
 
@@ -37,8 +39,15 @@ class Game:
         self.width = width
         self.board = [[None for i in range(width)] for j in range(height)] 
         self.snake = Snake([(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 4)], UP)
+        self.apple = self.generate_apple()
         self.update_board() 
-    
+
+    def generate_apple(self):
+        apple_coords = (randint(0, self.width-1), randint(0, self.height-1))
+        if apple_coords not in self.snake.body:
+            return Apple(apple_coords)
+        else:
+            return self.generate_apple()
 
     def update_board(self, prev_tail=None):
         if prev_tail is not None:
@@ -48,6 +57,8 @@ class Game:
                 self.board[self.height - coord[1] - 1][coord[0]] = 'X'
             else:
                 self.board[self.height - coord[1] - 1][coord[0]] = 'O'
+        self.board[self.height - self.apple.position[1] - 1][self.apple.position[0]] = 'A'
+
 
     def take_turn(self, direction=None):
         death_status = False
@@ -56,14 +67,20 @@ class Game:
             direction = self.snake.direction
         new_head_coords = ((head[0] + direction[0]) % self.width, 
                             (head[1] + direction[1]) % self.height)
-        prev_tail = self.snake.take_step(new_head_coords)
+        if new_head_coords == self.apple.position:
+            # Consume apple --> extend snake
+            self.snake.extend_head(direction)
+            self.apple = self.generate_apple() 
+            self.update_board()
+        else:
+            # Move snake
+            prev_tail = self.snake.take_step(new_head_coords)
+            self.update_board(prev_tail)
         self.snake.direction = direction
-        self.update_board(prev_tail)
 
         if self.snake.body.count(self.snake.head()) > 1:
             self.snake.dead = True
         return not self.snake.dead
-
 
 
     def render(self):
