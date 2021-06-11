@@ -25,6 +25,9 @@ class Snake:
     def head(self):
         return self.body[-1]
 
+    def extend_head(self, head_pos):
+        self.body.insert(len(self.body), head_pos)
+
 
 class Apple:
     def __init__(self, position, pt_val=1):
@@ -69,7 +72,7 @@ class Game:
                             (head[1] + direction[1]) % self.height)
         if new_head_coords == self.apple.position:
             # Consume apple --> extend snake
-            self.snake.extend_head(direction)
+            self.snake.extend_head(new_head_coords)
             self.apple = self.generate_apple() 
             self.update_board()
         else:
